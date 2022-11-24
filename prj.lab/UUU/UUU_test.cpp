@@ -32,7 +32,6 @@ struct solutions {
             as[idx] = n - i - 1;
         }
         std::distance(as.begin(), std::max_element(as.begin(), as.end()));
-        //std::cout << std::distance(as.begin(),std::max_element(as.begin(), as.end())) << "\n";
     }
     static void f_2_read(int& n, std::vector<int>& input, std::ifstream& fin) {
         fin >> n;
@@ -51,7 +50,6 @@ struct solutions {
                     unique.insert(idx_unique);
                 }
             }
-            //std::cout << idx_unique << "\n";
     }
 };
 
@@ -61,11 +59,6 @@ pdd test( const std::string& filename,
 {
     std::ifstream fin;
     fin.open(filename);
-
-    if (!(fin.is_open())) {
-        std::cout << "FILE IS NOT OPEN\n";
-        exit(-1);
-    }
 
     int n;
     std::vector<int> input(MAX_N,0);
@@ -78,8 +71,6 @@ pdd test( const std::string& filename,
     auto start_work = std::chrono::steady_clock::now();
     f_work(n, input);
     auto end_work = std::chrono::steady_clock::now();
-    
-    
 
     std::chrono::duration<double> read_time = end_read - start_read;
     std::chrono::duration<double> work_time = end_work - start_work;
@@ -107,16 +98,12 @@ void plot_n_m_dist(const std::vector<int>& vn, const std::vector<int>& vm) {
     plot(vm);
     
     save("plot_n_m_dist.png");
-    //save("plot_n_m_dist.png");
-    //show();
 }
 
 
 void generate_hyper(std::vector<int>& vn, std::vector<int>& vm) {
 
     std::set<int> set_n,set_m;
-
-    //double coef_n = 1.618, coef_m = 1.818;
     double coef_n = 1.3, coef_m = 1.818;
     if (fast) {
         coef_n += 5;
@@ -130,22 +117,12 @@ void generate_hyper(std::vector<int>& vn, std::vector<int>& vm) {
 
     set_n.insert(MAX_N-1);
     set_m.insert(MAX_N-1);
-
-    /*for (double i = 0; i < 5; ++i)
-        set_n.insert(ceil(MAX_N - 1 - pow(coef_n+1, i + 5)));
-    for (double i = 0; i < 5; ++i)
-        set_m.insert(ceil(MAX_N - 1 - pow(coef_m+2, i )));*/
-
     for (auto n_i = set_n.begin(); n_i != set_n.end(); n_i++) {
         vn.push_back(*n_i);
-        //std::cout << (*n_i) << " ";
     }
-    //std::cout << "\n";
     for (auto m_i = set_m.begin(); m_i != set_m.end(); m_i++) {
         vm.push_back(*m_i);
-        //std::cout << (*m_i) << " ";
     }
-    //std::cout << "\n";
 
     plot_n_m_dist(vn,vm);
     vm = { vm[0], vm[5],vm[10],vm[12],vm[15],vm[17],vm[19],vm[21] };
@@ -215,7 +192,6 @@ void md_maker(mas_plotter& g) {
     fout << "Next you will see plots with different m\n";
     fout << "Solution 1 is on the left, Solution 2 is to the right\n";
 
-
     std::vector<int> vn, vm;
     generate_hyper(vn, vm);
 
@@ -225,24 +201,8 @@ void md_maker(mas_plotter& g) {
         fout << "This is plot when M=" << sm << "\n";
         fout << "![[" << fname << "]]\n";
         {
-            /*using namespace matplot;
-            tiledlayout(1, 2);
-            nexttile();
-            std::set<std::vector<double>> Y_1;
-            for (int TEST = 0; TEST < TTT; ++TEST)
-                Y_1.insert(g[{0, m, TEST}].second);
-            plot(Y_1);
-            nexttile();
-
-            std::set<std::vector<double>> Y_2;
-            for (int TEST = 0; TEST < TTT; ++TEST)
-                Y_2.insert(g[{0, m, TEST}].second);
-
-            plot(Y_2);*/
-
             using namespace matplot;
             tiledlayout(1, 2);
-            
             for (int GRAF_i = 0; GRAF_i < 2; ++GRAF_i) {
                 nexttile();
                 std::vector<double>
@@ -264,21 +224,11 @@ void md_maker(mas_plotter& g) {
             save(fname);
         }
     }
-
     fout.close();
 }
 
-
 int main() {
-    
-    //srand(time(NULL));
-    //std::cout << std::setprecision(15) << std::fixed;
-
     mas_plotter all_plots = tester();
     md_maker(all_plots);
-    //using namespace matplot;
-    //std::vector<double> x = {1,2,-1,10,10};
-    //bar(x);
-    //save("barchart.png");
     return 0;
 }
