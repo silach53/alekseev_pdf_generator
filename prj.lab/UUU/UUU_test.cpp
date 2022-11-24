@@ -14,7 +14,8 @@ typedef std::pair<std::chrono::duration<double>, std::chrono::duration<double>> 
 
 const int MAX_N = 200001;
 const bool fast = 0;
-//const int MAX_N = 2000;
+const int TTT = 10;
+const int coef_mult = 100000;
 const std::string FIO = "test.txt";
 
 struct solutions {
@@ -51,18 +52,6 @@ struct solutions {
                 }
             }
             //std::cout << idx_unique << "\n";
-    }
-    static void f_3_work(int& n, std::vector<int>& data) {
-        std::unordered_set<int> unique;
-        unique.reserve(MAX_N);
-        int idx_unique = n;
-        for (int i = n - 1; 0 <= i; i -= 1) {
-            if (unique.find(data[i]) != unique.end()) {
-                idx_unique = data[i];
-                unique.insert(idx_unique);
-            }
-        }
-        //std::cout << idx_unique << "\n";
     }
 };
 
@@ -118,6 +107,7 @@ void plot_n_m_dist(const std::vector<int>& vn, const std::vector<int>& vm) {
     plot(vm);
     
     save("plot_n_m_dist.png");
+    //save("plot_n_m_dist.png");
     //show();
 }
 
@@ -126,13 +116,14 @@ void generate_hyper(std::vector<int>& vn, std::vector<int>& vm) {
 
     std::set<int> set_n,set_m;
 
-    double coef_n = 1.618, coef_m = 1.818;
+    //double coef_n = 1.618, coef_m = 1.818;
+    double coef_n = 1.3, coef_m = 1.818;
     if (fast) {
         coef_n += 5;
         coef_m += 300;
     }
 
-    for (double i = 1; i < MAX_N; i *= coef_n)
+    for (double i = 10; i < MAX_N; i *= coef_n)
         set_n.insert(ceil(i));
     for (double i = 1; i < MAX_N; i *= coef_m)
         set_m.insert(ceil(i));
@@ -156,11 +147,13 @@ void generate_hyper(std::vector<int>& vn, std::vector<int>& vm) {
     }
     //std::cout << "\n";
 
-    //plot_n_m_dist(vn,vm);
+    plot_n_m_dist(vn,vm);
+    vm = { vm[0], vm[5],vm[10],vm[12],vm[15],vm[17],vm[19],vm[21] };
     
 }
 
-typedef std::map<std::tuple<int, int>, std::pair<std::vector<double>, std::vector<double>>> mas_plotter;
+typedef std::map<std::tuple<int, int,int>, std::pair<std::vector<double>, std::vector<double>>> mas_plotter;
+
 
 mas_plotter tester() {
 
@@ -178,7 +171,8 @@ mas_plotter tester() {
 
     for (int i = 0; i < 2; ++i)
         for (auto m : vm)
-            g[{i, m}] = tmp;
+            for (int TEST = 0; TEST < TTT; ++TEST)
+                g[{i, m, TEST}] = tmp;
     std::cout << "VM.size():" << vm.size() << "\n";
     for (auto m : vm) {
         auto start_work = std::chrono::steady_clock::now();
@@ -187,21 +181,16 @@ mas_plotter tester() {
             auto start_1 = std::chrono::steady_clock::now();
 
             generate_data(FIO, n, m);
+            for (int TEST = 0; TEST < TTT; ++TEST) {
+                std::vector<pdd> t = std::vector<pdd>(2);
+                t[0] = test(FIO, solutions::f_1_read, solutions::f_1_work);
+                t[1] = test(FIO, solutions::f_2_read, solutions::f_2_work);
 
-            std::vector<pdd> t = std::vector<pdd>(2);
-            t[0] = test(FIO, solutions::f_1_read, solutions::f_1_work);
-            t[1] = test(FIO, solutions::f_2_read, solutions::f_2_work);
 
-
-            for (int i = 0; i < t.size(); ++i) {
-                g[{i, m}].first.push_back(t[i].first.count() / n);
-                g[{i, m}].second.push_back(t[i].second.count() / n);
-            }
-
-            if (details) {
-                auto end_1 = std::chrono::steady_clock::now();
-                std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end_1 - start_1).count() << "\n";
-
+                for (int i = 0; i < t.size(); ++i) {
+                    g[{i, m,TEST}].first.push_back(t[i].first.count() / n * 100000);
+                    g[{i, m, TEST}].second.push_back(t[i].second.count() / n * 100000);
+                }
             }
         };
 
@@ -218,38 +207,61 @@ void md_maker(mas_plotter& g) {
     fout << "There are link to github project, that generated this [pdf](";
     fout << "https:///github.com//silach53//alekseev_pdf_generator";
     fout << ")\n";
-    fout << "Destributions of n,m, ![[plot_n_m_dist.png]]\n";
-    fout << "There are some plot's of \n";
+    fout << "Destributions of n and m\n ![[plot_n_m_dist.png]]\n";
+    fout << "Where m is number of possible unique elements in data\n";
+    fout << "I tested every program for 10 times on the same data, and results have a lot of scatter ";
+    fout << "So insted of plotting 10 grafs and seeing a mess, i am showing min,max and average value ";
+    fout << "for every n\n";
+    fout << "Next you will see plots with different m\n";
+    fout << "Solution 1 is on the left, Solution 2 is to the right\n";
 
 
     std::vector<int> vn, vm;
     generate_hyper(vn, vm);
 
-    for (auto n : vn) {
-        fout << n << ",";
-    }
-    fout << "\n";
-
     for (auto m : vm) {
         std::string sm = std::to_string(m);
-        fout << "Plots_1 of m=" << sm << "![[plot_" << sm << "_dist_" << 1 << ".png]] \n";
-        fout << "Plots_2 of m=" << sm << "![[plot_" << sm << "_dist_" << 2 << ".png]] \n";
-        //plot(g[{0, m}].second);
-        //save(plot_"+sm+"_dist_"+std::to_string(1)+".png);
-        //plot(g[{1, m}].second);
-        //save(plot_"+sm+"_dist_"+std::to_string(2)+".png);
-        for (int t = 0; t < 0; ++t) {
-            
-            fout << "import matplotlib.pyplot as plt\na=[";
+        std::string fname= "plot_" + sm + "_dist.png";
+        fout << "This is plot when M=" << sm << "\n";
+        fout << "![[" << fname << "]]\n";
+        {
+            /*using namespace matplot;
+            tiledlayout(1, 2);
+            nexttile();
+            std::set<std::vector<double>> Y_1;
+            for (int TEST = 0; TEST < TTT; ++TEST)
+                Y_1.insert(g[{0, m, TEST}].second);
+            plot(Y_1);
+            nexttile();
 
-            for (int i = 0; i < g[{t, m}].second.size(); ++i) {
-                fout << g[{t, m}].second[i];
-                if (i != g[{t, m}].second.size()-1)
-                    fout << ",";
+            std::set<std::vector<double>> Y_2;
+            for (int TEST = 0; TEST < TTT; ++TEST)
+                Y_2.insert(g[{0, m, TEST}].second);
+
+            plot(Y_2);*/
+
+            using namespace matplot;
+            tiledlayout(1, 2);
+            
+            for (int GRAF_i = 0; GRAF_i < 2; ++GRAF_i) {
+                nexttile();
+                std::vector<double>
+                    min_1 = g[{GRAF_i, m, 0}].second,
+                    aver_1 = g[{GRAF_i, m, 0}].second,
+                    max_1 = g[{GRAF_i, m, 0}].second;
+
+                for (int TEST = 1; TEST < TTT; ++TEST)
+                    for (int F1 = 0; F1 < min_1.size(); ++F1) {
+                        min_1[F1] = min(min_1[F1], g[{GRAF_i, m, TEST}].second[F1]);
+                        max_1[F1] = max(min_1[F1], g[{GRAF_i, m, TEST}].second[F1]);
+                        aver_1[F1] += g[{GRAF_i, m, TEST}].second[F1];
+                    }
+                for (int F1 = 0; F1 < min_1.size(); ++F1)
+                    aver_1[F1] /= TTT;
+                std::set<std::vector<double>> Y_1 = { min_1,aver_1,max_1 };
+                plot(Y_1);
             }
-            fout << "]\n";
-            fout << "plt.plot(a)\nplt.savefig(\'";
-            fout << "plot_" << sm << "_dist_" << t+1 << ".png\')\n";
+            save(fname);
         }
     }
 
@@ -259,17 +271,14 @@ void md_maker(mas_plotter& g) {
 
 int main() {
     
-    srand(time(NULL));
-    
-    std::cout << std::setprecision(15) << std::fixed;
+    //srand(time(NULL));
+    //std::cout << std::setprecision(15) << std::fixed;
 
     mas_plotter all_plots = tester();
     md_maker(all_plots);
-
-
-    /*using namespace matplot;
-    std::vector<double> x = {1,2,3,4};
-    plot(x);
-    save("barchart.jpg");*/
+    //using namespace matplot;
+    //std::vector<double> x = {1,2,-1,10,10};
+    //bar(x);
+    //save("barchart.png");
     return 0;
 }
